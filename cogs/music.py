@@ -69,14 +69,30 @@ class Music(commands.Cog):
         if guild_id not in queues:
             queues[guild_id] = []
 
-        ydl_opts = {'format': 'bestaudio', 'noplaylist': True}
+    ydl_opts = {
+        'format': 'bestaudio',
+        'noplaylist': True,
+        'cookiefile': 'cookies.txt'
+    }
+    try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            song = {
-                'url': info['url'],
-                'title': info['title'],
-                'thumbnail': info['thumbnail']
-            }
+        info = ydl.extract_info(url, download=False)
+        song = {
+            'url': info['url'],
+            'title': info['title'],
+            'thumbnail': info['thumbnail']
+        }
+    except yt_dlp.utils.DownloadError as e:
+        if "sign in" in str(e).lower() or "cookies" in str(e).lower():
+            embed = Embed(
+                title="🍪 YouTube Cookie Error",
+                description="It looks like `cookies.txt` has expired or is missing.\nPlease update it and try again.",
+                color=discord.Color.red()
+            )
+            await interaction.followup.send(embed=embed)
+            return
+        else:
+            raise e
 
         voice_client = interaction.guild.voice_client
         if not voice_client:

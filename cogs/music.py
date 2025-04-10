@@ -56,6 +56,7 @@ class QueueView(ui.View):
 class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.bot.text_channels = {}
 
     @app_commands.command(name="play", description="Plays a song from a YouTube URL.")
     @app_commands.describe(url="YouTube URL")
@@ -63,7 +64,8 @@ class Music(commands.Cog):
         debug_command("play", interaction.user, url=url)
         await interaction.response.defer()
         guild_id = interaction.guild.id
-
+        self.bot.text_channels[guild_id] = interaction.channel
+        
         if guild_id not in queues:
             queues[guild_id] = []
 

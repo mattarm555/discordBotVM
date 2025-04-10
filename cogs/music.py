@@ -91,35 +91,40 @@ class Music(commands.Cog):
             embed.set_thumbnail(url=song['thumbnail'])
             await interaction.followup.send(embed=embed)
 
-    def play_next(self, interaction: Interaction):
-        guild_id = interaction.guild.id
-        voice_client = interaction.guild.voice_client
+    def play_next(self, guild_id):
+        voice_client = self.bot.get_guild(guild_id).voice_client
+        text_channel = self.bot.text_channels.get(guild_id)
 
         if queues[guild_id]:
             next_song = queues[guild_id].pop(0)
             voice_client.play(
                 discord.FFmpegPCMAudio(next_song['url']),
-                after=lambda e: self.play_next(interaction)
+                after=lambda e: self.play_next(guild_id)
             )
             embed = Embed(title='Now Playing', description=next_song['title'], color=discord.Color.green())
             embed.set_thumbnail(url=next_song['thumbnail'])
-            asyncio.run_coroutine_threadsafe(interaction.channel.send(embed=embed), self.bot.loop)
+            if text_channel:
+                asyncio.run_coroutine_threadsafe(text_channel.send(embed=embed), self.bot.loop)
         else:
-            # No more songs — auto disconnect in 60 seconds
-            asyncio.run_coroutine_threadsafe(self.auto_disconnect(interaction), self.bot.loop)
+            asyncio.run_coroutine_threadsafe(self.auto_disconnect(guild_id), self.bot.loop)
 
-    async def auto_disconnect(self, interaction: Interaction):
+
+    async def auto_disconnect(self, guild_id):
         await asyncio.sleep(60)
-        vc = interaction.guild.voice_client
+        guild = self.bot.get_guild(guild_id)
+        vc = guild.voice_client
         if vc and not vc.is_playing():
             await vc.disconnect()
-            queues[interaction.guild.id] = []
+            queues[guild_id] = []
             embed = Embed(
                 title="Jeng has ran away.",
                 description="No music playing — disconnected automatically.",
                 color=discord.Color.purple()
             )
-            await interaction.channel.send(embed=embed)
+            text_channel = self.bot.text_channels.get(guild_id)
+            if text_channel:
+                await text_channel.send(embed=embed)
+
 
     @app_commands.command(name="queue", description="Shows the current music queue.")
     async def queue(self, interaction: Interaction):

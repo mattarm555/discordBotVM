@@ -65,35 +65,35 @@ class Music(commands.Cog):
         await interaction.response.defer()
         guild_id = interaction.guild.id
         self.bot.text_channels[guild_id] = interaction.channel
-        
+    
         if guild_id not in queues:
             queues[guild_id] = []
 
-    ydl_opts = {
-        'format': 'bestaudio',
-        'noplaylist': True,
-        'cookiefile': 'cookies.txt'
-    }
+        ydl_opts = {
+            'format': 'bestaudio',
+            'noplaylist': True,
+            'cookiefile': 'cookies.txt'
+        }
 
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            song = {
-                'url': info['url'],
-                'title': info['title'],
-                'thumbnail': info['thumbnail']
-            }
-    except yt_dlp.utils.DownloadError as e:
-        if "sign in" in str(e).lower() or "cookies" in str(e).lower():
-            embed = Embed(
-                title="🍪 YouTube Cookie Error",
-                description="It looks like `cookies.txt` has expired or is missing.\nPlease update it and try again.",
-                color=discord.Color.red()
-            )
-            await interaction.followup.send(embed=embed)
-            return
-        else:
-            raise e
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+                song = {
+                    'url': info['url'],
+                    'title': info['title'],
+                    'thumbnail': info['thumbnail']
+                }
+        except yt_dlp.utils.DownloadError as e:
+            if "sign in" in str(e).lower() or "cookies" in str(e).lower():
+                embed = Embed(
+                    title="🍪 YouTube Cookie Error",
+                    description="It looks like `cookies.txt` has expired or is missing.\nPlease update it and try again.",
+                    color=discord.Color.red()
+                )
+                await interaction.followup.send(embed=embed)
+                return
+            else:
+                raise e
 
 
         voice_client = interaction.guild.voice_client
@@ -101,7 +101,7 @@ class Music(commands.Cog):
             voice_client = await interaction.user.voice.channel.connect()
 
         if not voice_client.is_playing():
-            voice_client.play(discord.FFmpegPCMAudio(song['url']), after=lambda e: self.play_next(interaction))
+            voice_client.play(discord.FFmpegPCMAudio(song['url']), after=lambda e: self.play_next(guild_id))
             embed = Embed(title='Now Playing', description=song['title'], color=discord.Color.green())
             embed.set_thumbnail(url=song['thumbnail'])
             await interaction.followup.send(embed=embed)

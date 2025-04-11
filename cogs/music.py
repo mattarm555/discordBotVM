@@ -74,14 +74,15 @@ class Music(commands.Cog):
         'noplaylist': True,
         'cookiefile': 'cookies.txt'
     }
+
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=False)
-        song = {
-            'url': info['url'],
-            'title': info['title'],
-            'thumbnail': info['thumbnail']
-        }
+            info = ydl.extract_info(url, download=False)
+            song = {
+                'url': info['url'],
+                'title': info['title'],
+                'thumbnail': info['thumbnail']
+            }
     except yt_dlp.utils.DownloadError as e:
         if "sign in" in str(e).lower() or "cookies" in str(e).lower():
             embed = Embed(
@@ -93,6 +94,7 @@ class Music(commands.Cog):
             return
         else:
             raise e
+
 
         voice_client = interaction.guild.voice_client
         if not voice_client:

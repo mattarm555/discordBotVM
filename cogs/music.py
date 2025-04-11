@@ -130,20 +130,30 @@ class Music(commands.Cog):
 
 
     async def auto_disconnect(self, guild_id):
-        await asyncio.sleep(60)
         guild = self.bot.get_guild(guild_id)
         vc = guild.voice_client
-        if vc and not vc.is_playing():
-            await vc.disconnect()
-            queues[guild_id] = []
-            embed = Embed(
-                title="Jeng has ran away.",
-                description="No music playing — disconnected automatically.",
-                color=discord.Color.purple()
-            )
-            text_channel = self.bot.text_channels.get(guild_id)
-            if text_channel:
-                await text_channel.send(embed=embed)
+
+        if not vc:
+            return
+
+        for _ in range(60):  # check once per second for 60 seconds
+            if vc.is_playing() or queues[guild_id]:  # if it's playing or new song added
+                return  # cancel the disconnect
+            await asyncio.sleep(1)
+
+        # Still not playing after 60s → disconnect
+        await vc.disconnect()
+        queues[guild_id] = []
+
+        embed = Embed(
+            title="Jeng has ran away.",
+            description="No music playing — disconnected automatically after 60 seconds.",
+            color=discord.Color.purple()
+        )
+        text_channel = self.bot.text_channels.get(guild_id)
+        if text_channel:
+            await text_channel.send(embed=embed)
+
 
 
     @app_commands.command(name="queue", description="Shows the current music queue.")

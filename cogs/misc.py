@@ -90,6 +90,7 @@ class Misc(commands.Cog):
         await interaction.response.send_message(f"{user.mention} wya")
 
         for _ in range(count - 1):
+            await asyncio.sleep(0.75)  # ⏱️ add delay between messages
             await interaction.channel.send(f"{user.mention} wya")
 
     @app_commands.command(name="snipe", description="Retrieves the last deleted message in the current channel.")
